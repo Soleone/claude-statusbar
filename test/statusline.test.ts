@@ -62,7 +62,7 @@ describe("registerStatusline", () => {
           },
         }],
       },
-      getContextUsage: () => ({ percent: 34 }),
+      getContextUsage: () => ({ percent: 34, contextWindow: 200_000, tokens: 68_000 }),
       ui: {
         setFooter: (factory: unknown) => {
           footerFactory = factory as FooterFactory;
@@ -103,7 +103,8 @@ describe("registerStatusline", () => {
     vi.setSystemTime(1_166_000);
     footer.render(200);
     expect(themed).toContainEqual({ color: "warning", text: "05:00" });
-    expect(plainRendered).toContain("▰▰▰▱▱▱▱▱▱▱ 34%");
+    expect(plainRendered).toContain("▰▰▰▱▱▱▱▱▱▱ 68k");
+    expect(plainRendered).not.toContain("34%");
     expect(rendered).toContain("\x1b[38;2;0;255;0m▰");
     expect(rendered).toContain("\x1b[38;2;102;255;0m▰");
     expect(rendered).toContain("\x1b[38;2;100;100;100m▱");
@@ -155,8 +156,11 @@ describe("registerStatusline", () => {
         },
       );
       const rendered = footer.render(200).join("\n");
+      const plainRendered = rendered.replace(/\x1b\[[0-9;]*m/g, "");
       expect(rendered).not.toContain("Venice: noisy");
       expect(rendered).toContain("Quick commit: staged 4 files");
+      // No context usage yet: the bar is empty and the count has nothing to show.
+      expect(plainRendered).toContain("▱▱▱▱▱▱▱▱▱▱ ?");
 
       await handlers.get("session_shutdown")!({});
     } finally {

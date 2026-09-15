@@ -7,7 +7,7 @@ A one-line session status bar for [pi](https://pi.dev), rendered in place of the
 It shows where you are, what the session has spent, and how much context is left:
 
 ```text
-~/src/pi/pi-statusline  ⎇ main*  Claude Sonnet 4.5 anthropic  ▰▰▰▱▱▱▱▱▱▱ 34%  $0.25 ⚡5.0M ↑502k ↓600 TTL 02:14  ⏱ 1h 12m  Started 09:30
+~/src/pi/pi-statusline  ⎇ main*  Claude Sonnet 4.5 anthropic  ▰▰▰▱▱▱▱▱▱▱ 68k  $0.25 ⚡5.0M ↑502k ↓600 TTL 02:14  ⏱ 1h 12m  Started 09:30
 ```
 
 | Field | Meaning |
@@ -15,7 +15,7 @@ It shows where you are, what the session has spent, and how much context is left
 | `~/src/...` | Working directory, `$HOME` collapsed to `~`. |
 | `⎇ main*` | Current branch from pi's own git provider. The `*` means the working tree is dirty, refreshed every 5s and after each tool result. `no-git` outside a repository. |
 | model / provider | Selected model display name and provider. |
-| `▰▰▱ 34%` | Context window fill, green through amber to red. |
+| `▰▰▱ 68k` | Context window fill, green through amber to red, plus the tokens it holds. The count reads `?` before the first assistant response. |
 | `$0.25` | Session cost. |
 | `⚡5.0M` | Cache-read tokens; the largest share of spend on a long session, and invisible in pi's default footer. |
 | `↑502k ↓600` | Input and output tokens across the current session branch. |

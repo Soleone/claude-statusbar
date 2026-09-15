@@ -103,10 +103,14 @@ export function registerStatusline(pi: ExtensionAPI, config: StatuslineConfig): 
           const provider = ctx.model?.provider || "no-provider";
           const usage = ctx.getContextUsage();
           const percent = usage ? Math.min(100, Math.max(0, Math.round(usage.percent ?? 0))) : 0;
+          // The bar carries the fraction, so the number next to it is absolute:
+          // a percentage means nothing once you switch between window sizes.
+          const tokens = usage?.tokens;
+          const contextTokens = typeof tokens === "number" ? compactTokenCount(tokens) : "?";
           const cacheAge = lastCacheRefreshAt === undefined ? undefined : Date.now() - lastCacheRefreshAt;
           const cacheTtl = cacheAge === undefined ? undefined : formatTtl(cacheAge);
           const cacheTtlColor = cacheAge !== undefined && cacheAge >= CACHE_TTL_WARNING_MS ? "warning" : "dim";
-          const context = `  ${contextBar(percent)} ${percent}%`;
+          const context = `  ${contextBar(percent)} ${contextTokens}`;
           const line = [
             theme.fg("muted", directory),
             theme.fg(dirty ? "warning" : "success", `  ${branchText}`),
