@@ -1,97 +1,73 @@
-# pi-statusline
+# claude-statusbar
 
-A one-line session status bar for [pi](https://pi.dev), rendered in place of the built-in footer.
-
-<img width="2758" height="180" alt="image" src="https://github.com/user-attachments/assets/bbb96d94-5998-49ff-b6e3-af984ba7116c" />
-
-It shows where you are, what the session has spent, and how much context is left:
+A Claude Code mod that draws one status line on the hint row under the prompt: where you are, what the session has spent, how full the context is, and the 5-hour and weekly limits at its right.
 
 ```text
-~/src/pi/pi-statusline  ⎇ main*  Claude Sonnet 4.5 anthropic  ▰▰▰▱▱▱▱▱▱▱ 68k  $0.25 ⚡5.0M ↑502k ↓600 TTL 02:14  ⏱ 1h 12m  Started 09:30
+~/src/claude-mods/claude-statusbar  ⎇ main*  claude-opus-5-5  ▰▰▰▰▰▰▱▱▱▱ 68k  $0.25  ⚡5.0M ↑502k ↓600  TTL 02:14  ⏱ 1h 12m  Started 12:48      5h 23%  wk 41%
 ```
+
+It is a port of [pi-statusline](https://github.com/Soleone/pi-statusline) to Claude Code's mod API. The left side keeps its fields and order:
 
 | Field | Meaning |
 | --- | --- |
-| `~/src/...` | Working directory, `$HOME` collapsed to `~`. |
-| `⎇ main*` | Current branch from pi's own git provider. The `*` means the working tree is dirty, refreshed every 5s and after each tool result. `no-git` outside a repository. |
-| model / provider | Selected model display name and provider. |
-| `▰▰▱ 68k` | Context window fill, green through amber to red, plus the tokens it holds. The count reads `?` before the first assistant response. |
-| `$0.25` | Session cost. |
-| `⚡5.0M` | Cache-read tokens; the largest share of spend on a long session, and invisible in pi's default footer. |
-| `↑502k ↓600` | Input and output tokens across the current session branch. |
-| `TTL 02:14` | Time since the last cache refresh. Turns amber past 5 minutes. |
-| `⏱ 1h 12m` | Elapsed time in the session. |
-| `Started 09:30` | Session start, or `yesterday` / `Sep 2` once it is older. |
+| `~/src/...` | Working directory, home written as `~`. |
+| `⎇ main*` | Current branch. `*` means the working tree differs from HEAD, untracked files included. `no-git` outside a repository. |
+| model | The main loop's model, as `$.session.model()` gives it. |
+| `▰▰▱ 68k` | Context window fill, and the tokens the last response was answered over. `?` before the first response. |
+| `$0.25` | Session cost, as the engine totals it. |
+| `⚡5.0M ↑502k ↓600` | Cache-read, input and output tokens of the turns finished since the mod loaded. |
+| `TTL 02:14` | Time since the last finished turn that read or wrote the prompt cache. Amber past five minutes. |
+| `⏱ 1h 12m` | Time since the session started. |
+| `Started 12:48` | Session start as `HH:MM`, `HH:MM yesterday`, or a date like `Sep 2` once it is older. |
 
-Extension status lines (`ctx.ui.setStatus`) render below on their own lines, so replacing the footer does not hide other extensions' indicators.
+The right side shows the rate-limit windows the engine reports for a Claude subscription: `5h` for the five-hour window and `wk` for the seven-day one. Each turns amber at 70% and red at 90%. Off a subscription, or before the first reading, the right side is empty.
 
-## Install
+## Load it
+
+The mods folder, `~/src/claude-mods`, is a marketplace: its `.claude-plugin/marketplace.json` lists each mod. Register it once, then install the mod from it:
 
 ```bash
-ln -s "$SRC/pi/pi-statusline" "$PI/extensions/pi-statusline"
+claude plugin marketplace add ~/src/claude-mods
+claude plugin install statusbar@soleone-mods
 ```
 
-Or add it to `packages` in `~/.pi/agent/settings.json`:
-
-```json
-{ "packages": ["git:github.com/your-name/pi-statusline"] }
-```
-
-The status line is on as soon as it is installed. Reload pi to pick it up.
+`claude plugin disable statusbar@soleone-mods` turns the mod off, and `enable` turns it back on. The mod is read from its folder in this repo, so edits take effect after `/reload-plugins`.
 
 ## Command
 
-`/statusline` reports the current state. Changes are persisted and then trigger a reload, so they apply to the running session.
-
 | Command | Effect |
 | --- | --- |
-| `/statusline` | Show whether the line is on and which statuses are hidden. |
-| `/statusline on` \| `off` | Enable or disable the custom footer, restoring pi's built-in one. |
-| `/statusline hide <key>` | Stop drawing that extension's status line. |
-| `/statusline unhide <key>` | Draw it again. |
-| `/statusline reset-hidden` | Restore the default hide list. |
+| `/statusbar` or `/statusbar status` | Show whether the bar is on. |
+| `/statusbar on` / `off` | Show or hide the bar. The choice is kept in the host's store across sessions. |
 
-Keys are the identifiers extensions pass to `ctx.ui.setStatus`, visible in the footer itself. By default `goosedump` and `venice` are hidden because their indicators restate what this line already shows; an explicitly empty `hiddenStatuses` draws everything.
+While the bar is on, it replaces the engine's hint line with the same text, so that line's pills are plain text, not live.
 
-## Settings
+## Differences from pi-statusline
 
-Stored atomically at `$PI_CODING_AGENT_DIR/pi-statusline.json`, falling back to `~/.pi/agent/pi-statusline.json`:
-
-```json
-{
-  "version": 1,
-  "enabled": true,
-  "hiddenStatuses": ["goosedump", "venice"]
-}
-```
-
-An unreadable or malformed file degrades to defaults with a notification rather than taking the footer down.
-
-## Relationship to pi-git
-
-This line came out of [pi-git](../pi-git), which rendered it behind a `customFooter` setting. It has no dependency on pi-git: the branch label uses pi's own git provider, the dirty flag is a plain `git status --porcelain`, and the token formatter is a local copy so a status line does not depend on a git workflow package.
-
-pi-git's commit notices reuse the `$0.42 ⚡19.0M ↑264k ↓86k` shape on purpose. If you change it, change `src/token-format.ts` here and `src/usage-format.ts` there together.
-
-`setFooter` replaces the built-in footer wholesale, and the last extension to claim it wins. Installing another footer extension alongside this one gives you whichever loads last.
+- **On the hint line, not the footer.** The bar shares the row under the prompt, with the engine's hint on the left and the bar right-aligned. A mod cannot replace Claude Code's footer, so the hint's pills become plain text.
+- **Totals start when the mod loads.** Tokens are summed from each finished turn's usage, so a resumed session starts its ⚡ ↑ ↓ from zero, where pi-statusline counts the whole session branch.
+- **Theme colors.** Colors are the theme's `success`, `warning`, `error`, `subtle` and `claude` rather than pi's truecolor gradient.
+- **No hide list.** pi-statusline hides other extensions' footer statuses. Claude Code mods have no such footer, so there is nothing to hide.
 
 ## Development
 
+The manifest names the plugin `statusbar`: the engine reserves names that begin with `claude-` for Anthropic's own plugins. The folder keeps the name `claude-statusbar`.
+
 ```bash
-pnpm install --ignore-scripts
-pnpm typecheck
-pnpm test
+claude plugin validate ~/src/claude-mods/claude-statusbar
+claude plugin test ~/src/claude-mods/claude-statusbar
 ```
 
-Tests cover config parsing and defaults, atomic writes with no leftover temp files, file modes, footer rendering including the context-bar colour ramp and TTL colouring, the hide list, and the periodic dirty-state render.
+Once the engine has loaded the mod from a folder it can write to, `.claude-plugin/types/` holds the API declarations and a `tsconfig.json`, so `tsc -p ~/src/claude-mods/claude-statusbar` type-checks it. That folder is generated and git-ignored.
 
 ## Structure
 
 ```text
-index.ts           registration, /statusline command
-src/
-  statusline.ts    footer factory, timers, session usage totals
-  config.ts        load, parse, atomic write
-  token-format.ts  compact token counts
-test/
+.claude-plugin/plugin.json  manifest; names the state contract
+hooks/hooks.json            names the hooks module
+hooks/register.tsx          hooks: session, turns, tool calls, /statusbar, the band; the git read
+hooks/format.ts             pure formatting and bar layout
+hooks/git.ts                the git status command and its parser
+types/index.d.ts            the $.state contract
+test/                       claude plugin test: formats, git parsing, the band
 ```

@@ -1,0 +1,6 @@
+{
+  "name": "statusbar",
+  "version": "0.1.0",
+  "description": "Session status above the prompt, with the 5h and weekly limits at its right",
+  "types": "./types/index.d.ts"
+}
