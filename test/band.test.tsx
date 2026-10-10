@@ -45,6 +45,7 @@ for (const surface of ['terminal', 'desktop'] as const) {
     expect(await ui.find({ type: 'Text', text: /~\/src\/claude-mods\/claude-statusbar/ })).toBeDefined();
     expect(await ui.find({ type: 'Text', text: /shift|agents/ })).toBeUndefined();
     expect(await ui.find({ type: 'Text', text: /5h 23%  wk 41%$/ })).toBeDefined();
+    expect(await ui.find({ type: 'Text', text: /⏱|Started/ })).toBeUndefined();
   });
 }
 
@@ -104,6 +105,6 @@ test('/statusbar off answers, and the hint goes back to the engine', async ($, o
   expect(reply.text).toBe('statusbar is off');
 
   const ui = await $.ui.mount({ plugin: 'statusbar', surface: 'terminal', component: 'PromptHint', props: IDLE });
-  expect(await ui.find({ type: 'Text', text: /Started/ })).toBeUndefined();
+  expect(await ui.find({ type: 'Text', text: /claude-statusbar/ })).toBeUndefined();
   expect(await ui.find({ type: 'Text', text: /shift\+tab to cycle/ })).toBeDefined();
 });

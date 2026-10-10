@@ -6,8 +6,6 @@ import {
   compactTokens,
   contextBar,
   contextPercent,
-  formatElapsed,
-  formatStarted,
   formatTtl,
   limitTone,
   shortenHome,
@@ -27,7 +25,6 @@ const BAR: BarInput = {
   cost: 0.25,
   totals: { input: 502_000, output: 600, cacheRead: 5_000_000 },
   lastCacheRefreshAt: NOW - 134_000,
-  startedAt: NOW - 72 * 60_000,
   limits: [
     { kind: 'seven_day', percentUsed: 41 },
     { kind: 'five_hour', percentUsed: 23.4 },
@@ -49,19 +46,6 @@ describe('the readout formats', () => {
     expect(formatTtl(134_000)).toBe('02:14');
     expect(formatTtl(0)).toBe('00:00');
     expect(formatTtl(-5_000)).toBe('00:00');
-  });
-
-  test('elapsed time shows minutes, then hours and minutes', () => {
-    expect(formatElapsed(0)).toBe('0m');
-    expect(formatElapsed(5 * 60_000)).toBe('5m');
-    expect(formatElapsed(72 * 60_000)).toBe('1h 12m');
-  });
-
-  test('the start time says yesterday, then gives a date once it is older', () => {
-    const at = (day: number, hour: number, minute: number) => new Date(2026, 9, day, hour, minute).getTime();
-    expect(formatStarted(at(8, 9, 30), NOW)).toBe('09:30');
-    expect(formatStarted(at(7, 9, 30), NOW)).toBe('09:30 yesterday');
-    expect(formatStarted(new Date(2026, 8, 2, 9, 30).getTime(), NOW)).toBe('Sep 2');
   });
 
   test('the home folder is written as ~ only on a path boundary', () => {
@@ -112,7 +96,7 @@ describe('the bar', () => {
   test('the left side reads in pi-statusline order and the limits sit at the right', () => {
     const bar = buildBar(BAR);
     expect(text(bar.left)).toBe(
-      '~/src/claude-mods/claude-statusbar  ⎇ main*  claude-opus-5-5  ▰▰▰▰▰▰▱▱▱▱ 68k  $0.25  ⚡5.0M ↑502k ↓600  TTL 02:14  ⏱ 1h 12m  Started 12:48',
+      '~/src/claude-mods/claude-statusbar  ⎇ main*  claude-opus-5-5  ▰▰▰▰▰▰▱▱▱▱ 68k  $0.25  ⚡5.0M ↑502k ↓600  TTL 02:14',
     );
     expect(text(bar.right)).toBe('5h 23%  wk 41%');
   });

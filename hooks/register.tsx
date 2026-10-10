@@ -131,7 +131,6 @@ async function gather($: EngineInterface): Promise<BarInput> {
     cost: usage.cost?.usd,
     totals: await read($, totals),
     lastCacheRefreshAt: await read($, lastCacheRefreshAt),
-    startedAt: usage.startedAt,
     limits: usage.rateLimits,
   };
 }

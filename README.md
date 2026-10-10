@@ -3,7 +3,7 @@
 A Claude Code mod that draws one status line on the hint row under the prompt: where you are, what the session has spent, how full the context is, and the 5-hour and weekly limits at its right.
 
 ```text
-~/src/claude-mods/claude-statusbar  ⎇ main*  claude-opus-5-5  ▰▰▰▰▰▰▱▱▱▱ 68k  $0.25  ⚡5.0M ↑502k ↓600  TTL 02:14  ⏱ 1h 12m  Started 12:48      5h 23%  wk 41%
+~/src/claude-mods/claude-statusbar  ⎇ main*  claude-opus-5-5  ▰▰▰▰▰▰▱▱▱▱ 68k  $0.25  ⚡5.0M ↑502k ↓600  TTL 02:14      5h 23%  wk 41%
 ```
 
 It is a port of [pi-statusline](https://github.com/Soleone/pi-statusline) to Claude Code's mod API. The left side keeps its fields and order:
@@ -17,8 +17,6 @@ It is a port of [pi-statusline](https://github.com/Soleone/pi-statusline) to Cla
 | `$0.25` | Session cost, as the engine totals it. |
 | `⚡5.0M ↑502k ↓600` | Cache-read, input and output tokens of the turns finished since the mod loaded. |
 | `TTL 02:14` | Time since the last finished turn that read or wrote the prompt cache. Amber past five minutes. |
-| `⏱ 1h 12m` | Time since the session started. |
-| `Started 12:48` | Session start as `HH:MM`, `HH:MM yesterday`, or a date like `Sep 2` once it is older. |
 
 The right side shows the rate-limit windows the engine reports for a Claude subscription: `5h` for the five-hour window and `wk` for the seven-day one. Each turns amber at 70% and red at 90%. Off a subscription, or before the first reading, the right side is empty.
 

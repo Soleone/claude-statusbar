@@ -17,7 +17,6 @@ export type BarInput = {
   cost: number | undefined;
   totals: Totals;
   lastCacheRefreshAt: number | null;
-  startedAt: number;
   limits: readonly { kind: string; percentUsed: number }[];
 };
 
@@ -28,7 +27,6 @@ export type UsageCounts = {
   cache_creation_input_tokens: number;
 };
 
-const DAY_MS = 86_400_000;
 /** Past the prompt cache's five-minute TTL, the readout turns amber. */
 const CACHE_TTL_WARNING_MS = 5 * 60_000;
 /** The limits the bar shows, in the order it draws them. */
@@ -36,7 +34,6 @@ const LIMIT_WINDOWS = [
   { kind: 'five_hour', label: '5h' },
   { kind: 'seven_day', label: 'wk' },
 ] as const;
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /**
  * The bar in pi-statusline's order. The left side is cut from its end when the
@@ -60,9 +57,6 @@ export function buildBar(input: BarInput): Bar {
     const age = input.now - input.lastCacheRefreshAt;
     left.push(gap(), { text: `TTL ${formatTtl(age)}`, tone: age >= CACHE_TTL_WARNING_MS ? 'warning' : 'dim' });
   }
-  left.push(gap(), { text: `⏱ ${formatElapsed(input.now - input.startedAt)}`, tone: 'dim' });
-  left.push(gap(), { text: `Started ${formatStarted(input.startedAt, input.now)}`, tone: 'dim' });
-
   const right: Segment[] = [];
   for (const window of LIMIT_WINDOWS) {
     const limit = input.limits.find(one => one.kind === window.kind);
@@ -124,23 +118,6 @@ export function formatTtl(milliseconds: number): string {
   return `${pad2(Math.floor(seconds / 60))}:${pad2(seconds % 60)}`;
 }
 
-/** `5m`, then `1h 12m`. */
-export function formatElapsed(milliseconds: number): string {
-  const minutes = Math.max(0, Math.floor(milliseconds / 60_000));
-  if (minutes < 60) return `${minutes}m`;
-  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
-}
-
-/** `09:30`, then `09:30 yesterday`, then `Sep 2` once it is older. */
-export function formatStarted(startedAt: number, now: number): string {
-  const started = new Date(startedAt);
-  const time = `${pad2(started.getHours())}:${pad2(started.getMinutes())}`;
-  const days = Math.round((startOfDay(now) - startOfDay(startedAt)) / DAY_MS);
-  if (days === 0) return time;
-  if (days === 1) return `${time} yesterday`;
-  return `${MONTHS[started.getMonth()]} ${started.getDate()}`;
-}
-
 /** The directory with the home folder written as `~`. */
 export function shortenHome(cwd: string, home: string | undefined): string {
   if (home === undefined || home === '') return cwd;
@@ -155,11 +132,6 @@ function branchSegment(repo: Repo): Segment {
 
 function gap(): Segment {
   return { text: '  ', tone: 'plain' };
-}
-
-function startOfDay(milliseconds: number): number {
-  const date = new Date(milliseconds);
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 }
 
 function clampPercent(percent: number): number {
