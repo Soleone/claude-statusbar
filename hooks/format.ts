@@ -17,7 +17,7 @@ export type BarInput = {
   cost: number | undefined;
   totals: Totals;
   lastCacheRefreshAt: number | null;
-  limits: readonly { kind: string; percentUsed: number }[];
+  limits: readonly { kind: string; percentUsed: number; resetsAt: string }[];
 };
 
 export type UsageCounts = {
@@ -29,10 +29,10 @@ export type UsageCounts = {
 
 /** Past the prompt cache's five-minute TTL, the readout turns amber. */
 const CACHE_TTL_WARNING_MS = 5 * 60_000;
-/** The limits the bar shows, in the order it draws them. */
+/** The limits the bar shows, in the order it draws them. Only the 5h window names its time to reset. */
 const LIMIT_WINDOWS = [
-  { kind: 'five_hour', label: '5h' },
-  { kind: 'seven_day', label: 'wk' },
+  { kind: 'five_hour', label: '5h', countdown: true },
+  { kind: 'seven_day', label: 'wk', countdown: false },
 ] as const;
 
 /**
@@ -62,7 +62,8 @@ export function buildBar(input: BarInput): Bar {
     const limit = input.limits.find(one => one.kind === window.kind);
     if (limit === undefined) continue;
     if (right.length > 0) right.push(gap());
-    right.push({ text: `${window.label} ${Math.round(limit.percentUsed)}%`, tone: limitTone(limit.percentUsed) });
+    const until = window.countdown ? ` ${formatUntil(limit.resetsAt, input.now)}` : '';
+    right.push({ text: `${window.label}${until} ${Math.round(limit.percentUsed)}%`, tone: limitTone(limit.percentUsed) });
   }
   return { left, right };
 }
@@ -116,6 +117,13 @@ export function compactTokens(value: number): string {
 export function formatTtl(milliseconds: number): string {
   const seconds = Math.max(0, Math.floor(milliseconds / 1_000));
   return `${pad2(Math.floor(seconds / 60))}:${pad2(seconds % 60)}`;
+}
+
+/** Time left until a reset, as `4h23m`, or `45m` inside the hour. A reset that has passed reads `0m`. */
+export function formatUntil(resetsAt: string, now: number): string {
+  const minutes = Math.max(0, Math.floor((Date.parse(resetsAt) - now) / 60_000));
+  const hours = Math.floor(minutes / 60);
+  return hours > 0 ? `${hours}h${pad2(minutes % 60)}m` : `${minutes}m`;
 }
 
 /** The directory with the home folder written as `~`. */

@@ -7,6 +7,7 @@ import {
   contextBar,
   contextPercent,
   formatTtl,
+  formatUntil,
   limitTone,
   shortenHome,
   usesCache,
@@ -14,6 +15,7 @@ import {
 import type { BarInput, Segment } from '../hooks/format';
 
 const NOW = new Date(2026, 9, 8, 14, 0).getTime();
+const at = (minutes: number): string => new Date(NOW + minutes * 60_000).toISOString();
 
 const BAR: BarInput = {
   now: NOW,
@@ -26,8 +28,8 @@ const BAR: BarInput = {
   totals: { input: 502_000, output: 600, cacheRead: 5_000_000 },
   lastCacheRefreshAt: NOW - 134_000,
   limits: [
-    { kind: 'seven_day', percentUsed: 41 },
-    { kind: 'five_hour', percentUsed: 23.4 },
+    { kind: 'seven_day', percentUsed: 41, resetsAt: at(60 * 24 * 2) },
+    { kind: 'five_hour', percentUsed: 23.4, resetsAt: at(4 * 60 + 23) },
   ],
 };
 
@@ -67,6 +69,13 @@ describe('the readout formats', () => {
     expect(contextPercent({ window: 200_000 })).toBe(0);
   });
 
+  test('the time to a reset counts hours and minutes, and minutes inside the hour', () => {
+    expect(formatUntil(at(4 * 60 + 23), NOW)).toBe('4h23m');
+    expect(formatUntil(at(5 * 60), NOW)).toBe('5h00m');
+    expect(formatUntil(at(45), NOW)).toBe('45m');
+    expect(formatUntil(at(-3), NOW)).toBe('0m');
+  });
+
   test('a limit turns amber at 70 percent and red at 90', () => {
     expect(limitTone(23)).toBe('plain');
     expect(limitTone(70)).toBe('warning');
@@ -98,7 +107,7 @@ describe('the bar', () => {
     expect(text(bar.left)).toBe(
       '~/src/claude-mods/claude-statusbar  ⎇ main*  claude-opus-5-5  ▰▰▰▰▰▰▱▱▱▱ 68k  $0.25  ⚡5.0M ↑502k ↓600  TTL 02:14',
     );
-    expect(text(bar.right)).toBe('5h 23%  wk 41%');
+    expect(text(bar.right)).toBe('5h 4h23m 23%  wk 41%');
   });
 
   test('the branch is left out until the checkout is read, and named no-git outside one', () => {

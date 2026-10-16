@@ -10,7 +10,7 @@ const USAGE: SessionUsage = {
   startedAt: NOW - 72 * 60_000,
   context: { tokens: 68_000, percent: 68, window: 100_000 },
   rateLimits: [
-    { kind: 'five_hour', percentUsed: 23.4, resetsAt: '2026-10-08T19:00:00Z' },
+    { kind: 'five_hour', percentUsed: 23.4, resetsAt: new Date(NOW + 4 * 3_600_000 + 23 * 60_000).toISOString() },
     { kind: 'seven_day', percentUsed: 41, resetsAt: '2026-10-14T00:00:00Z' },
   ],
   cost: { usd: 0.25 },
@@ -44,7 +44,7 @@ for (const surface of ['terminal', 'desktop'] as const) {
 
     expect(await ui.find({ type: 'Text', text: /~\/src\/claude-mods\/claude-statusbar/ })).toBeDefined();
     expect(await ui.find({ type: 'Text', text: /shift|agents/ })).toBeUndefined();
-    expect(await ui.find({ type: 'Text', text: /5h 23%  wk 41%$/ })).toBeDefined();
+    expect(await ui.find({ type: 'Text', text: /5h 4h23m 23%  wk 41%$/ })).toBeDefined();
     expect(await ui.find({ type: 'Text', text: /⏱|Started/ })).toBeUndefined();
   });
 }
