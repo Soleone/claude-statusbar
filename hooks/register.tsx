@@ -135,11 +135,12 @@ async function gather($: EngineInterface): Promise<BarInput> {
   };
 }
 
-/** The hint text without the shift+tab cycle hint or "← for agents", and without dividers at either end. */
+/** The hint text without the shift+tab cycle hint, "← for agents" or "esc to interrupt", and without dividers at either end. */
 function cleanHint(hint: string): string {
   return hint
     .replace(/\(?shift\W*tab\s+to\s+cycle\)?/i, '')
     .replace(/\s*[·•∙⋅]?\s*←\s*for\s+agents?/i, '')
+    .replace(/\besc\s+to\s+interrupt\b/i, '')
     .replace(/^[\s​-‏⁠﻿·•∙⋅]+|[\s​-‏⁠﻿·•∙⋅]+$/g, '');
 }
 

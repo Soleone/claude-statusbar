@@ -27,6 +27,8 @@ export type UsageCounts = {
   cache_creation_input_tokens: number;
 };
 
+/** A working directory longer than this many characters is cut to its own name. */
+const CWD_TRUNCATE_LENGTH = 40;
 /** Past the prompt cache's five-minute TTL, the readout turns amber. */
 const CACHE_TTL_WARNING_MS = 5 * 60_000;
 /** The limits the bar shows, in the order it draws them. Only the 5h window names its time to reset. */
@@ -40,7 +42,7 @@ const LIMIT_WINDOWS = [
  * band is narrow, so the limits at the right are the last thing to go.
  */
 export function buildBar(input: BarInput): Bar {
-  const left: Segment[] = [{ text: shortenHome(input.cwd, input.home), tone: 'muted' }];
+  const left: Segment[] = [{ text: shortenCwd(input.cwd, input.home), tone: 'muted' }];
   if (input.repo !== null) left.push(gap(), branchSegment(input.repo));
   if (input.model) left.push(gap(), { text: input.model, tone: 'text' });
 
@@ -131,6 +133,17 @@ export function shortenHome(cwd: string, home: string | undefined): string {
   if (home === undefined || home === '') return cwd;
   if (cwd === home) return '~';
   return cwd.startsWith(`${home}/`) ? `~${cwd.slice(home.length)}` : cwd;
+}
+
+/**
+ * The directory in full, with home as `~`. Past 40 characters it is cut to the
+ * directory's own name behind two periods, as `../name`.
+ */
+export function shortenCwd(cwd: string, home: string | undefined): string {
+  const full = shortenHome(cwd, home);
+  if (full.length <= CWD_TRUNCATE_LENGTH) return full;
+  const name = cwd.split('/').filter(Boolean).pop();
+  return name === undefined ? full : `../${name}`;
 }
 
 function branchSegment(repo: Repo): Segment {

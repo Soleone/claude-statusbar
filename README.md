@@ -10,7 +10,7 @@ It is a port of [pi-statusline](https://github.com/Soleone/pi-statusline) to Cla
 
 | Field | Meaning |
 | --- | --- |
-| `~/src/...` | Working directory, home written as `~`. |
+| `~/src/...` | Working directory, home written as `~`. Past 40 characters it is cut to its own name behind two periods, as `../claude-statusbar`. |
 | `⎇ main*` | Current branch. `*` means the working tree differs from HEAD, untracked files included. `no-git` outside a repository. |
 | model | The main loop's model, as `$.session.model()` gives it. |
 | `▰▰▱ 68k` | Context window fill, and the tokens the last response was answered over. `?` before the first response. |

@@ -9,6 +9,7 @@ import {
   formatTtl,
   formatUntil,
   limitTone,
+  shortenCwd,
   shortenHome,
   usesCache,
 } from '../hooks/format';
@@ -55,6 +56,20 @@ describe('the readout formats', () => {
     expect(shortenHome('/home/soleone', '/home/soleone')).toBe('~');
     expect(shortenHome('/home/soleonex/src', '/home/soleone')).toBe('/home/soleonex/src');
     expect(shortenHome('/srv/app', undefined)).toBe('/srv/app');
+  });
+
+  test('a working directory up to 40 characters is shown in full', () => {
+    expect(shortenCwd('/home/soleone/src/app', '/home/soleone')).toBe('~/src/app');
+    expect(shortenCwd('/home/soleone/src/claude-mods/claude-statusbar', '/home/soleone')).toBe(
+      '~/src/claude-mods/claude-statusbar',
+    );
+  });
+
+  test('a working directory past 40 characters is cut to its own name, behind two periods', () => {
+    expect(shortenCwd('/srv/a-very-long-project-directory-name-here', undefined)).toBe(
+      '../a-very-long-project-directory-name-here',
+    );
+    expect(shortenCwd('/', undefined)).toBe('/');
   });
 
   test('the context bar has ten cells and fills by tenths', () => {

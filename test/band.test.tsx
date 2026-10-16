@@ -49,7 +49,7 @@ for (const surface of ['terminal', 'desktop'] as const) {
   });
 }
 
-test('a working hint is kept, and the divider in front of it is dropped', async ($, on) => {
+test('a working hint drops its esc to interrupt cue, and the bar follows at the start', async ($, on) => {
   aSession(on);
 
   const ui = await $.ui.mount({
@@ -59,7 +59,8 @@ test('a working hint is kept, and the divider in front of it is dropped', async 
     props: { isDraft: false, isWorking: true, hint: '· esc to interrupt' },
   });
 
-  expect(await ui.find({ type: 'Text', text: /^ esc to interrupt  ~\/src/ })).toBeDefined();
+  expect(await ui.find({ type: 'Text', text: /^~\/src\/claude-mods\/claude-statusbar  / })).toBeDefined();
+  expect(await ui.find({ type: 'Text', text: /esc|interrupt/ })).toBeUndefined();
 });
 
 test('the limits are left out without a rate-limit reading', async ($, on) => {
