@@ -63,6 +63,20 @@ test('a working hint drops its esc to interrupt cue, and the bar follows at the 
   expect(await ui.find({ type: 'Text', text: /esc|interrupt/ })).toBeUndefined();
 });
 
+test('the task toggle is cut to its key, ctrl+t, beside the bar', async ($, on) => {
+  aSession(on);
+
+  const ui = await $.ui.mount({
+    plugin: 'statusbar',
+    surface: 'terminal',
+    component: 'PromptHint',
+    props: { isDraft: false, isWorking: false, hint: 'ctrl+t to hide tasks' },
+  });
+
+  expect(await ui.find({ type: 'Text', text: /ctrl\+t/ })).toBeDefined();
+  expect(await ui.find({ type: 'Text', text: /hide|tasks/ })).toBeUndefined();
+});
+
 test('the limits are left out without a rate-limit reading', async ($, on) => {
   aSession(on, { ...USAGE, rateLimits: [] });
 

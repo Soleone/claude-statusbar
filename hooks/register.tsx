@@ -135,12 +135,16 @@ async function gather($: EngineInterface): Promise<BarInput> {
   };
 }
 
-/** The hint text without the shift+tab cycle hint, "← for agents" or "esc to interrupt", and without dividers at either end. */
+/**
+ * The hint text without the shift+tab cycle hint, "← for agents" or "esc to interrupt", with
+ * "ctrl+t to hide tasks" cut to "ctrl+t", and without dividers at either end.
+ */
 function cleanHint(hint: string): string {
   return hint
     .replace(/\(?shift\W*tab\s+to\s+cycle\)?/i, '')
     .replace(/\s*[·•∙⋅]?\s*←\s*for\s+agents?/i, '')
     .replace(/\besc\s+to\s+interrupt\b/i, '')
+    .replace(/\bctrl\+t\s+to\s+(hide|show)\s+tasks\b/i, 'ctrl+t')
     .replace(/^[\s​-‏⁠﻿·•∙⋅]+|[\s​-‏⁠﻿·•∙⋅]+$/g, '');
 }
 
